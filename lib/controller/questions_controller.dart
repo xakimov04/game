@@ -11,9 +11,8 @@ class QuestionsController extends GetxController {
 
   List<QuestionsModels> get questions => _questions;
 
-  RxString answer = ''.obs;
-  RxString answerFull = ''.obs;
-  
+  RxInt olmos = 0.obs;
+
   @override
   void onInit() {
     super.onInit();

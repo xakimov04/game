@@ -19,7 +19,8 @@ class _HomeScreenState extends State<HomeScreen> {
   List<String> selectedLetters = [];
   List<String> answerLetters = [];
   int currentQuestionIndex = 0;
-  int score = 0;
+  int score = 1;
+  int olmos = 0;
   bool isAnswerCorrect = true;
   final PageController _pageController = PageController();
 
@@ -65,8 +66,7 @@ class _HomeScreenState extends State<HomeScreen> {
       } else {
         _showResultDialog();
       }
-    } else if (selectedLetters.length ==
-        currentAnswer.length) {
+    } else if (selectedLetters.length == currentAnswer.length) {
       isAnswerCorrect = false;
     } else {
       isAnswerCorrect = true;
@@ -76,10 +76,11 @@ class _HomeScreenState extends State<HomeScreen> {
   void _goToNextQuestion() {
     setState(() {
       score++;
+      questionController.olmos += 50;
       currentQuestionIndex++;
       _pageController.nextPage(
         duration: const Duration(milliseconds: 500),
-        curve: Curves.bounceIn,
+        curve: Curves.linear,
       );
       _clearSelectedLetters();
     });
@@ -97,11 +98,11 @@ class _HomeScreenState extends State<HomeScreen> {
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Quiz Completed'),
-        content: Text('You answered $score out of ${questionController.questions.length} questions correctly.'),
+        content: Text(
+            'You answered $score out of ${questionController.questions.length} questions correctly.'),
         actions: [
           TextButton(
             onPressed: () {
-              Navigator.of(context).pop();
               Navigator.of(context).pop();
             },
             child: const Text('OK'),
@@ -109,6 +110,104 @@ class _HomeScreenState extends State<HomeScreen> {
         ],
       ),
     );
+  }
+
+  void _showHelpDialog() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(20),
+        ),
+        title: const Text(
+          'Yordam',
+          textAlign: TextAlign.center,
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Text(
+              "Keraksiz harflarni ochish yoki o'chirish uchun qimmatbaho toshlardan foydalanishingiz mumkin!",
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 20),
+            ElevatedButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+                if (questionController.olmos >= 6) {
+                  questionController.olmos -= 6;
+                  _revealLetter();
+                } else {
+                  _showInsufficientOlmosDialog();
+                }
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.blue,
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(20),
+                ),
+              ),
+              child: const Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    'Harfni oching',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  SizedBox(width: 10),
+                  Icon(Icons.diamond, color: Colors.red),
+                  Text('6'),
+                ],
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.close),
+            onPressed: () {
+              Navigator.of(context).pop();
+            },
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showInsufficientOlmosDialog() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Not Enough Olmos'),
+        content: const Text('You do not have enough olmos to reveal a letter.'),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.of(context).pop();
+            },
+            child: const Text('OK'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _revealLetter() {
+    final currentAnswer =
+        questionController.questions[currentQuestionIndex].answer;
+    for (var letter in currentAnswer.split('')) {
+      if (!selectedLetters.contains(letter)) {
+        setState(() {
+          selectedLetters.add(letter);
+        });
+        break;
+      }
+    }
   }
 
   @override
@@ -137,7 +236,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    const Expanded(
+                    Expanded(
                       child: RaitingWidget(
                         image: 'star',
                       ),
@@ -167,7 +266,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       ),
                     ),
                     const Gap(5),
-                    const Expanded(
+                    Expanded(
                       child: RaitingWidget(
                         image: 'olmos',
                       ),
@@ -178,7 +277,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     HelpButton(
-                      onTap: () {},
+                      onTap: _showHelpDialog,
                       image: 'help',
                     ),
                     HelpButton(
